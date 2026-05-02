@@ -7,6 +7,17 @@
              mc:Ignorable="d" 
              Width="130" MinHeight="600">
     <StackPanel>
-            
+        <Button Style="{StaticResource HubNavBtn}">
+            <Path Width="55" Height="55" Style="{StaticResource ProfileIcon}" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="Uniform"/>
+        </Button>
+        <Button Style="{StaticResource HubNavBtn}">
+            <Path Width="55" Height="55" Style="{StaticResource HomeIcon}" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="Fill"/>
+        </Button>
+        <Button Style="{StaticResource HubNavBtn}">
+            <Path Width="50" Height="55" Style="{StaticResource CreateProjectIcon}" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="Fill"/>
+        </Button>
+        <Button Style="{StaticResource HubNavBtn}">
+            <Path Width="55" Height="55" Style="{StaticResource SettingsIcon}" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="Fill"/>
+        </Button>
     </StackPanel>
 </UserControl>
