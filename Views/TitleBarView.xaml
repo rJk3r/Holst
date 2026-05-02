@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="Holst.Views.TitleBarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Holst.Views"
+             mc:Ignorable="d" 
+             MinWidth="600"  MinHeight="36" MaxHeight="36">
+    <Grid VerticalAlignment="Center" Height="36" MinWidth="600">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" >
+            <Path Width="24" Height="24" Style="{StaticResource LogoIcon}" Grid.Column="1" />
+            <TextBlock Text="Holst" 
+                   Grid.Column="1" 
+                   Foreground="White" 
+                   TextAlignment="Center"
+                   FontSize="24"
+                   FontFamily="Calibri"
+                   Margin="15,0,0,0"
+                   Height="30"/>
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Style="{StaticResource TitleBarBtn}" Click="MinimizeWindow">
+                <Path Style="{StaticResource MinimizeIcon}"/>
+            </Button>
+            <Button Style="{StaticResource TitleBarBtn}" Click="MaximizeWindow">
+                <Path Style="{StaticResource ResizeIcon}"/>
+            </Button>
+            <Button Style="{StaticResource CloseBtn}" Click="CloseWindow">
+                <Path Style="{StaticResource CloseIcon}"/>
+            </Button>
+
+        </StackPanel>
+    </Grid>
+</UserControl>
