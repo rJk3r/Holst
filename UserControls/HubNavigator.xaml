@@ -4,8 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Holst.UserControls"
-             mc:Ignorable="d" 
-             Width="130" MinHeight="600">
+             mc:Ignorable="d">
     <StackPanel>
         <Button Style="{StaticResource HubNavBtn}">
             <Path Width="55" Height="55" Style="{StaticResource ProfileIcon}" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="Uniform"/>

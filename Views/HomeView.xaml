@@ -4,9 +4,24 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Holst.Views"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             xmlns:UserControls="clr-namespace:Holst.UserControls"
+             mc:Ignorable="d" MinWidth="900" MinHeight="564">
     <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="130"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="45"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        
+        <UserControls:HubNavigator Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"/>
+        <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
+            <!-- Here we need the projects list-->
+        </Grid>
         
     </Grid>
 </UserControl>

@@ -1,5 +1,4 @@
 ﻿using Holst;
-using Holst.Services;
 using Holst.Stores;
 using Holst.ViewModels;
 using System.Windows;
