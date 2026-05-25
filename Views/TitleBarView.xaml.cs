@@ -22,8 +22,6 @@ namespace Holst.Views
             if (window != null)
             {
                 window.Close();
-                // Альтернатива, если нужно завершить все процессы жестко: 
-                // Application.Current.Shutdown();
             }
         }
 

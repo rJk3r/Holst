@@ -1,5 +1,4 @@
-﻿
-using Holst.ViewModels;
+﻿using Holst.ViewModels;
 using Holst.Stores;
 
 namespace Holst.Commands

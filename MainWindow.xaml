@@ -23,8 +23,12 @@
 
         <ContentControl Content="{Binding CurrentViewModel}" Grid.Row="1">
             <ContentControl.Resources>
+                <DataTemplate DataType="{x:Type viewmodels:AuthorizationViewModel}">
+                    <views:AuthorizationView />
+                </DataTemplate>
+
                 <DataTemplate DataType="{x:Type viewmodels:HomeViewModel}">
-                    <views:HomeView />
+                    <views:AuthorizationView />
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type viewmodels:AccountViewModel}">

@@ -4,7 +4,7 @@ using System;
 
 namespace Holst.Models
 {
-    public class Account
+    public class Authorization
     {
         public string Email { get; set; }
         public string Username { get; set; }

@@ -12,7 +12,7 @@ namespace Holst
         {
             NavigationStore navigationStore = new NavigationStore();
 
-            navigationStore.CurrentViewModel = new HomeViewModel(navigationStore);
+            navigationStore.CurrentViewModel = new AuthorizationViewModel(navigationStore);
 
             MainWindow = new MainWindow()
             {

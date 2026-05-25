@@ -9,19 +9,38 @@
     <Grid>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="130"/>
+            <ColumnDefinition Width="90"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        
+
         <Grid.RowDefinitions>
             <RowDefinition Height="45"/>
-            <RowDefinition />
+            <RowDefinition  />
         </Grid.RowDefinitions>
-        
+
         <UserControls:HubNavigator Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"/>
-        <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
-            <!-- Here we need the projects list-->
-        </Grid>
-        
+        <Path Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+            Stroke="#4C4C4C"
+            StrokeThickness="1" 
+            Fill="Transparent" 
+            Stretch="Fill"
+            HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure StartPoint="0,565">
+                        <LineSegment Point="0, 15"/>
+                        <ArcSegment Point="15,0" Size="15,15" SweepDirection="Clockwise"/>
+                        <LineSegment Point="15, 0"/>
+                        <LineSegment Point="905, 0"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+
+        <StackPanel Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
+            <UserControls:Header Panel.ZIndex="1000" />
+        </StackPanel>
+
     </Grid>
+    
 </UserControl>

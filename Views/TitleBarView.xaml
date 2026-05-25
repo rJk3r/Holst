@@ -13,15 +13,15 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" >
-            <Path Width="24" Height="24" Style="{StaticResource LogoIcon}" Grid.Column="1" />
+            <Path Width="20" Height="20" Stretch="Fill" Style="{StaticResource LogoIcon}" Grid.Column="1" />
             <TextBlock Text="Holst" 
                    Grid.Column="1" 
                    Foreground="White" 
+                   FontWeight="ExtraBlack"
                    TextAlignment="Center"
-                   FontSize="24"
+                   FontSize="16"
                    FontFamily="Calibri"
-                   Margin="15,0,0,0"
-                   Height="30"/>
+                   Margin="5,0,0,0" VerticalAlignment="Center"/>
         </StackPanel>
 
         <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal">

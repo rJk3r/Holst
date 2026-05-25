@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Holst.UserControls.Authentication
+namespace Holst.Views
 {
     /// <summary>
-    /// Логика взаимодействия для Switch.xaml
+    /// Логика взаимодействия для AccountView.xaml
     /// </summary>
-    public partial class Switch : UserControl
+    public partial class AuthorizationView : UserControl
     {
-        public Switch()
+        public AuthorizationView()
         {
             InitializeComponent();
         }

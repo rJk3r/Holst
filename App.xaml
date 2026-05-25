@@ -8,6 +8,7 @@
                 <ResourceDictionary Source="/Styles/Buttons.xaml"/>
                 <ResourceDictionary Source="/Styles/ColorPalette.xaml"/>
                 <ResourceDictionary Source="/Styles/Icons.xaml"/>
+                <ResourceDictionary Source="/Styles/InputBoxes.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
