@@ -11,6 +11,7 @@ namespace Holst.ViewModels
 
         public ICommand NavigateHomeCommand { get;  }
 
+
         public AccountViewModel(NavigationStore navigationStore)
         {
             NavigateHomeCommand = new NavigateCommand<HomeViewModel>(navigationStore, () => new HomeViewModel(navigationStore));

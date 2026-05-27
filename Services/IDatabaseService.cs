@@ -11,24 +11,25 @@ namespace Holst.Services
 
         
         // Here we can get user and their role
-        string CurrentUser { get; }
-        string CurrentRole { get; }
+        string? CurrentUser { get; }
+        string? CurrentRole { get; }
 
-        // Registration of new user by login/pass
-        string RegisterNewUser(string login, string password);
-        // We try to get user data from SQL and say ALL GOOD if data in SQL and on Client совпали
-        bool AuthorizeUser(string login, string password);
+        // Registration of new user by login/pass (async)
+        System.Threading.Tasks.Task<string> RegisterNewUserAsync(string login, string password);
 
-        // Delete target user
-        string DeleteUser(string targetName);
+        // We try to get user data from SQL and say ALL GOOD if data in SQL and on Client совпали (async)
+        System.Threading.Tasks.Task<bool> AuthorizeUserAsync(string login, string password);
 
-        //Check if password in DB match written on client
-        bool CheckPassword(string password);
+        // Delete target user (async)
+        System.Threading.Tasks.Task<string> DeleteUserAsync(string targetName);
 
-        // Get user name on SQL by name written on client, if match -> get result
-        string GetUserName(string name);
+        // Check if password in DB match written on client (async)
+        System.Threading.Tasks.Task<bool> CheckPasswordAsync(string password);
 
-        // Тут всё из названия понятно, получить дату создания аккаунта по имени
-        string GetAccountCreationDate(string name);
+        // Get user name on SQL by name written on client, if match -> get result (async)
+        System.Threading.Tasks.Task<string> GetUserNameAsync(string name);
+
+        // Тут всё из названия понятно, получить дату создания аккаунта по имени (async)
+        System.Threading.Tasks.Task<string> GetAccountCreationDateAsync(string name);
     }
 }

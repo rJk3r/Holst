@@ -10,22 +10,24 @@ namespace Holst.Services
 {
     public class DatabaseService : IDatabaseService
     {
-
-        private readonly string _connectionString;
+        // Мусорная строка
+        //private readonly string _connectionString= "Driver={PostgreSQL Unicode};Server=localhost;Port=5432;Database=HolstApplication;Uid=admin;Pwd=admin;";
+        
+        
+        private readonly string _connectionString= "Driver={PostgreSQL ODBC Driver(UNICODE)};Server=localhost;Port=5432;Database=HolstApplication;UID=postgres;PWD=admin;\r\n";
 
 
         // Current User data n' role (equals null before the user write it by itself)
-        public string CurrentUser { get; private set; } = null;
-        public string CurrentRole { get; private set; } = null;
+        public string? CurrentUser { get; private set; } = null;
+        public string? CurrentRole { get; private set; } = null;
 
         // class ctor
 
-        public DatabaseService(string connectionString)
+        public DatabaseService()
         {
-            _connectionString = connectionString;
         }
 
-        public string RegisterNewUser(string login, string password)
+        public async System.Threading.Tasks.Task<string> RegisterNewUserAsync(string login, string password)
         {
             // Используем RETURNING для получения даты, созданной на стороне базы данных
             string query = "INSERT INTO users (username, password, role) VALUES (?, ?, 'User') RETURNING created_at;";
@@ -36,13 +38,13 @@ namespace Holst.Services
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = password;
 
-                conn.Open();
-                object result = cmd.ExecuteScalar();
+                await conn.OpenAsync();
+                object result = await cmd.ExecuteScalarAsync();
                 return result != null ? result.ToString() : "Ошибка при регистрации";
             }
         }
 
-        public bool AuthorizeUser(string login, string password)
+        public async System.Threading.Tasks.Task<bool> AuthorizeUserAsync(string login, string password)
         {
             string query = "SELECT role FROM users WHERE username = ? AND password = ?;";
 
@@ -52,8 +54,16 @@ namespace Holst.Services
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = password;
 
-                conn.Open();
-                object roleResult = cmd.ExecuteScalar();
+                try
+                {
+
+                    await conn.OpenAsync();
+                } catch
+                {
+                    return false;
+                }
+
+                object roleResult = await cmd.ExecuteScalarAsync();
 
                 if (roleResult != null)
                 {
@@ -61,11 +71,11 @@ namespace Holst.Services
                     CurrentRole = roleResult.ToString();
                     return true;
                 }
-            }
             return false;
+            } 
         }
 
-        public string DeleteUser(string targetName)
+        public async System.Threading.Tasks.Task<string> DeleteUserAsync(string targetName)
         {
             string query = "DELETE FROM users WHERE username = ?;";
 
@@ -74,13 +84,13 @@ namespace Holst.Services
             {
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = targetName;
 
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
+                await conn.OpenAsync();
+                int rowsAffected = await cmd.ExecuteNonQueryAsync();
                 return rowsAffected > 0 ? $"Пользователь {targetName} успешно удален." : "Пользователь не найден.";
             }
         }
 
-        public bool CheckPassword(string password)
+        public async System.Threading.Tasks.Task<bool> CheckPasswordAsync(string password)
         {
             if (string.IsNullOrEmpty(CurrentUser)) return false;
 
@@ -92,13 +102,14 @@ namespace Holst.Services
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = CurrentUser;
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = password;
 
-                conn.Open();
-                long count = Convert.ToInt64(cmd.ExecuteScalar());
+                await conn.OpenAsync();
+                object scalar = await cmd.ExecuteScalarAsync();
+                long count = Convert.ToInt64(scalar);
                 return count > 0;
             }
         }
 
-        public string GetUserName(string name)
+        public async System.Threading.Tasks.Task<string> GetUserNameAsync(string name)
         {
             string query = "SELECT username FROM users WHERE username = ?;";
 
@@ -106,12 +117,13 @@ namespace Holst.Services
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
             {
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = name;
-                conn.Open();
-                return cmd.ExecuteScalar()?.ToString() ?? "Не найден";
+                await conn.OpenAsync();
+                object res = await cmd.ExecuteScalarAsync();
+                return res?.ToString() ?? "Не найден";
             }
         }
 
-        public string GetAccountCreationDate(string name)
+        public async System.Threading.Tasks.Task<string> GetAccountCreationDateAsync(string name)
         {
             string query = "SELECT created_at FROM users WHERE username = ?;";
 
@@ -119,8 +131,9 @@ namespace Holst.Services
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
             {
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = name;
-                conn.Open();
-                return cmd.ExecuteScalar()?.ToString() ?? "Не найден";
+                await conn.OpenAsync();
+                object res = await cmd.ExecuteScalarAsync();
+                return res?.ToString() ?? "Не найден";
             }
         }
 

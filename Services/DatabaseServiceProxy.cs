@@ -12,48 +12,43 @@ namespace Holst.Services
         // Incapsualte the DbService obj
         private DatabaseService _realService;
 
-        // Incapsulated connect data string
-        private readonly string _connectionString;
 
         // Duplicate the proterties for normal interface
-        public string CurrentUser => _realService?.CurrentUser;
-        public string CurrentRole => _realService?.CurrentRole;
+        public string? CurrentUser => _realService?.CurrentUser;
+        public string? CurrentRole => _realService?.CurrentRole;
 
-
-        public DatabaseServiceProxy(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        public DatabaseServiceProxy() { }
 
         // Вспомогательный метод ленивой инициализации
         private DatabaseService GetRealService()
         {
             if (_realService == null)
             {
-                _realService = new DatabaseService(_connectionString);
+                _realService = new DatabaseService();
             }
             return _realService;
         }
 
 
-        //Ctor
-        public string RegisterNewUser(string login, string password)
+        // Async API implementations
+        public async System.Threading.Tasks.Task<string> RegisterNewUserAsync(string login, string password)
         {
             Debug.WriteLine($"[LOG] User reg try: {login}");
-            return GetRealService().RegisterNewUser(login, password);
+            var service = GetRealService();
+            return await service.RegisterNewUserAsync(login, password);
         }
 
-        public bool AuthorizeUser(string login, string password)
+        public async System.Threading.Tasks.Task<bool> AuthorizeUserAsync(string login, string password)
         {
-            bool isSuccess = GetRealService().AuthorizeUser(login, password);
+            var service = GetRealService();
+            bool isSuccess = await service.AuthorizeUserAsync(login, password);
             Debug.WriteLine($"[LOG] Authorize user '{login}': {(isSuccess ? "t" : "f")}");
             return isSuccess;
         }
 
-        public string DeleteUser(string targetName)
+        public async System.Threading.Tasks.Task<string> DeleteUserAsync(string targetName)
         {
             Debug.WriteLine($"[LOG] Check perms to remove target: {targetName}...");
-
             var service = GetRealService();
 
             // Get perms to exec command
@@ -62,23 +57,26 @@ namespace Holst.Services
                 return "Error. You are not an Admin!";
             }
 
-            return service.DeleteUser(targetName);
+            return await service.DeleteUserAsync(targetName);
         }
 
-        public bool CheckPassword(string password)
+        public async System.Threading.Tasks.Task<bool> CheckPasswordAsync(string password)
         {
             Debug.WriteLine($"[LOG] Get pwd for current target ({CurrentUser}).");
-            return GetRealService().CheckPassword(password);
+            var service = GetRealService();
+            return await service.CheckPasswordAsync(password);
         }
 
-        public string GetUserName(string name)
+        public async System.Threading.Tasks.Task<string> GetUserNameAsync(string name)
         {
-            return GetRealService().GetUserName(name);
+            var service = GetRealService();
+            return await service.GetUserNameAsync(name);
         }
 
-        public string GetAccountCreationDate(string name)
+        public async System.Threading.Tasks.Task<string> GetAccountCreationDateAsync(string name)
         {
-            return GetRealService().GetAccountCreationDate(name);
+            var service = GetRealService();
+            return await service.GetAccountCreationDateAsync(name);
         }
 
     }

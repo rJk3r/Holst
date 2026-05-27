@@ -8,7 +8,7 @@ namespace Holst.ViewModels
     public class AuthorizationViewModel : ViewModelBase
     {
 
-        public ICommand NavigateToHome { get;  }
+        public ICommand NavigateToHome { get; }
 
         public AuthorizationViewModel(NavigationStore navigationStore)
         {
