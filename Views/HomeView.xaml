@@ -37,10 +37,38 @@
             </Path.Data>
         </Path>
 
-        <StackPanel Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
-            <UserControls:Header Panel.ZIndex="1000" />
-        </StackPanel>
+        <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <UserControls:Header Grid.Row="0" Panel.ZIndex="1000" />
+            <ScrollViewer Grid.Row="1" Margin="15,5,15,15" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Projects}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.OpenProjectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource ProjectCardBtn}"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Type}" FontSize="12" Foreground="#AAAAAA" Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding Author}" FontSize="12" Foreground="#888888" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" FontSize="10" Foreground="#666666" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
 
     </Grid>
-    
 </UserControl>

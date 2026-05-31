@@ -25,18 +25,20 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="LoginTopBtn" Content="Вход" Click="LoginTopBtn_Click" Style="{StaticResource PrimaryButton}" Width="240" Height="70" Grid.Column="0" Margin="0,0,1,0"/>
-                    <Button x:Name="RegisterTopBtn" Content="Регистрация" Click="RegisterTopBtn_Click" Width="240" Height="70" Grid.Column="1" Margin="1,0,0,0"/>
+                    <Button Content="Вход" Command="{Binding LoginTopCommand}" Style="{StaticResource PrimaryButton}" Width="240" Height="70" Grid.Column="0" Margin="0,0,1,0"/>
+                    <Button Content="Регистрация" Command="{Binding RegisterTopCommand}" Width="240" Height="70" Grid.Column="1" Margin="1,0,0,0"/>
                 </Grid>
             </Grid>
             <Label Content="Имя пользователя" Foreground="White" FontSize="28" FontWeight="Normal" FontFamily="Calibri"/>
-            <TextBox x:Name="Email" Style="{StaticResource Input}"/>
+            <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}"/>
             <Label Content="Пароль" Foreground="White" FontSize="28" FontWeight="Normal" FontFamily="Calibri"/>
-            <TextBox x:Name="Password" Style="{StaticResource Input}"/>
-            <Label x:Name="PasswordCheckLabel" Content="Вновь пароль" Foreground="White" FontSize="28" FontWeight="Normal" FontFamily="Calibri" Visibility="Collapsed"/>
-            <TextBox x:Name="PasswordCheck" Style="{StaticResource Input}" Visibility="Collapsed"/>
+            <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}"/>
+            <Label Content="Вновь пароль" Foreground="White" FontSize="28" FontWeight="Normal" FontFamily="Calibri" Visibility="{Binding ConfirmPasswordVisibility}"/>
+            <TextBox Text="{Binding ConfirmPassword, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" Visibility="{Binding ConfirmPasswordVisibility}"/>
 
-            <Button x:Name="ProceedAuth" Click="ProceedAuth_Click" Width="300" Height="80" Content="Войти" Margin="0,5,0,0" Style="{StaticResource PrimaryButton}"/>
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" FontSize="16" TextWrapping="Wrap" Margin="0,5,0,0" Visibility="{Binding ErrorMessageVisibility}"/>
+
+            <Button Command="{Binding ProceedAuthCommand}" Width="300" Height="80" Content="{Binding ProceedButtonText}" Margin="0,5,0,0" Style="{StaticResource PrimaryButton}"/>
         </StackPanel>
 
 

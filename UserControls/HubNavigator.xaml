@@ -12,7 +12,7 @@
         <Button Style="{StaticResource HubNavBtn}" Command="{Binding NavigateHomeCommand}">
             <Path Width="28" Height="28" Style="{StaticResource HomeIcon}" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="Fill"/>
         </Button>
-        <Button Style="{StaticResource HubNavBtn}">
+        <Button Style="{StaticResource HubNavBtn}" Command="{Binding NavigateProjectEditCommand}">
             <Path Width="28" Height="30" Style="{StaticResource CreateProjectIcon}" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="Fill"/>
         </Button>
         <Button Style="{StaticResource HubNavBtn}">

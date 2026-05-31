@@ -1,10 +1,13 @@
 ﻿using Holst.Models;
+using Holst.Views;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Holst.ViewModels;
 
 namespace Holst.Services
 {
@@ -37,13 +40,7 @@ namespace Holst.Services
             }
 
             // Perform registration
-            var result = await _db.RegisterNewUserAsync(username, password);
-
-            // If result contains error text, treat as failure (simple heuristic)
-            if (string.IsNullOrEmpty(result) || result.Contains("Ошибка"))
-            {
-                return RegistrationResult.EmailAlreadyExists; // best-effort mapping
-            }
+            await _db.RegisterNewUserAsync(username, password);
 
             return RegistrationResult.Success;
         }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Holst.ViewModels
 {
+    // TODO - projects viewModel
     class ProjectsViewModel
     {
     }

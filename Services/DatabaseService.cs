@@ -1,27 +1,25 @@
 ﻿using System;
 using System.Data;
+using System.Diagnostics;
 // using System.Data.SqlClient; не подойдлёт
 
 // driver import
 using System.Data.Odbc;
 
-
 namespace Holst.Services
 {
     public class DatabaseService : IDatabaseService
     {
-        // Мусорная строка
-        //private readonly string _connectionString= "Driver={PostgreSQL Unicode};Server=localhost;Port=5432;Database=HolstApplication;Uid=admin;Pwd=admin;";
-        
-        
-        private readonly string _connectionString= "Driver={PostgreSQL ODBC Driver(UNICODE)};Server=localhost;Port=5432;Database=HolstApplication;UID=postgres;PWD=admin;\r\n";
-
+        // Если установлен psqlODBC — попробуйте варианты:
+        //   Driver={PostgreSQL Unicode};
+        //   Driver={PostgreSQL ANSI};
+        //   Driver={PostgreSQL ODBC Driver(UNICODE)};
+        // Для x64-драйвера обычно используется "PostgreSQL Unicode".
+        private readonly string _connectionString = "Driver={PostgreSQL Unicode};Server=127.0.0.1;Port=5432;Database=HolstApplication;UID=postgres;PWD=admin;";
 
         // Current User data n' role (equals null before the user write it by itself)
-        public string? CurrentUser { get; private set; } = null;
-        public string? CurrentRole { get; private set; } = null;
-
-        // class ctor
+        public string? CurrentUser { get; private set; }
+        public string? CurrentRole { get; private set; }
 
         public DatabaseService()
         {
@@ -29,24 +27,43 @@ namespace Holst.Services
 
         public async System.Threading.Tasks.Task<string> RegisterNewUserAsync(string login, string password)
         {
-            // Используем RETURNING для получения даты, созданной на стороне базы данных
-            string query = "INSERT INTO users (username, password, role) VALUES (?, ?, 'User') RETURNING created_at;";
+            // Генерируем userid на стороне приложения, чтобы не нарушить NOT NULL
+            string newUserId = Guid.NewGuid().ToString();
+            string query = "INSERT INTO users (userid, login, password, role, registrationdate) VALUES (?, ?, ?, 'User', CURRENT_TIMESTAMP) RETURNING registrationdate;";
 
             using (OdbcConnection conn = new OdbcConnection(_connectionString))
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
             {
+                cmd.Parameters.Add("?", OdbcType.VarChar).Value = newUserId;
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = password;
 
-                await conn.OpenAsync();
-                object result = await cmd.ExecuteScalarAsync();
-                return result != null ? result.ToString() : "Ошибка при регистрации";
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] RegisterNewUserAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    object result = await cmd.ExecuteScalarAsync();
+                    return result != null ? result.ToString() : "Ошибка при регистрации";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] RegisterNewUserAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
             }
         }
 
         public async System.Threading.Tasks.Task<bool> AuthorizeUserAsync(string login, string password)
         {
-            string query = "SELECT role FROM users WHERE username = ? AND password = ?;";
+            string query = "SELECT role FROM users WHERE login = ? AND password = ?;";
 
             using (OdbcConnection conn = new OdbcConnection(_connectionString))
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
@@ -56,37 +73,72 @@ namespace Holst.Services
 
                 try
                 {
-
                     await conn.OpenAsync();
-                } catch
+                }
+                catch (Exception ex)
                 {
+                    Debug.WriteLine($"[DB] AuthorizeUserAsync connection error: {ex.Message}");
                     return false;
                 }
 
-                object roleResult = await cmd.ExecuteScalarAsync();
-
-                if (roleResult != null)
+                try
                 {
-                    CurrentUser = login;
-                    CurrentRole = roleResult.ToString();
-                    return true;
+                    object roleResult = await cmd.ExecuteScalarAsync();
+                    if (roleResult != null)
+                    {
+                        CurrentUser = login;
+                        CurrentRole = roleResult.ToString();
+
+                        // Update last activity timestamp
+                        string updateQuery = "UPDATE users SET lastactivity = CURRENT_TIMESTAMP WHERE login = ?;";
+                        using (OdbcConnection updateConn = new OdbcConnection(_connectionString))
+                        using (OdbcCommand updateCmd = new OdbcCommand(updateQuery, updateConn))
+                        {
+                            updateCmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
+                            await updateConn.OpenAsync();
+                            await updateCmd.ExecuteNonQueryAsync();
+                        }
+
+                        return true;
+                    }
                 }
-            return false;
-            } 
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] AuthorizeUserAsync execution error: {ex.Message}");
+                }
+                return false;
+            }
         }
 
         public async System.Threading.Tasks.Task<string> DeleteUserAsync(string targetName)
         {
-            string query = "DELETE FROM users WHERE username = ?;";
+            string query = "DELETE FROM users WHERE login = ?;";
 
             using (OdbcConnection conn = new OdbcConnection(_connectionString))
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
             {
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = targetName;
 
-                await conn.OpenAsync();
-                int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                return rowsAffected > 0 ? $"Пользователь {targetName} успешно удален." : "Пользователь не найден.";
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] DeleteUserAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    return rowsAffected > 0 ? $"Пользователь {targetName} успешно удален." : "Пользователь не найден.";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] DeleteUserAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
             }
         }
 
@@ -94,7 +146,7 @@ namespace Holst.Services
         {
             if (string.IsNullOrEmpty(CurrentUser)) return false;
 
-            string query = "SELECT COUNT(1) FROM users WHERE username = ? AND password = ?;";
+            string query = "SELECT COUNT(1) FROM users WHERE login = ? AND password = ?;";
 
             using (OdbcConnection conn = new OdbcConnection(_connectionString))
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
@@ -102,38 +154,91 @@ namespace Holst.Services
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = CurrentUser;
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = password;
 
-                await conn.OpenAsync();
-                object scalar = await cmd.ExecuteScalarAsync();
-                long count = Convert.ToInt64(scalar);
-                return count > 0;
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] CheckPasswordAsync connection error: {ex.Message}");
+                    return false;
+                }
+
+                try
+                {
+                    object scalar = await cmd.ExecuteScalarAsync();
+                    long count = Convert.ToInt64(scalar);
+                    return count > 0;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] CheckPasswordAsync execution error: {ex.Message}");
+                    return false;
+                }
             }
         }
 
-        public async System.Threading.Tasks.Task<string> GetUserNameAsync(string name)
+        public async System.Threading.Tasks.Task<string> GetUserNameAsync(string login)
         {
-            string query = "SELECT username FROM users WHERE username = ?;";
+            string query = "SELECT login FROM users WHERE login = ?;";
 
             using (OdbcConnection conn = new OdbcConnection(_connectionString))
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
             {
-                cmd.Parameters.Add("?", OdbcType.VarChar).Value = name;
-                await conn.OpenAsync();
-                object res = await cmd.ExecuteScalarAsync();
-                return res?.ToString() ?? "Не найден";
+                cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
+
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetUserNameAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    object res = await cmd.ExecuteScalarAsync();
+                    return res?.ToString() ?? "Не найден";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetUserNameAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
             }
         }
 
         public async System.Threading.Tasks.Task<string> GetAccountCreationDateAsync(string name)
         {
-            string query = "SELECT created_at FROM users WHERE username = ?;";
+            string query = "SELECT registrationdate FROM users WHERE login = ?;";
 
             using (OdbcConnection conn = new OdbcConnection(_connectionString))
             using (OdbcCommand cmd = new OdbcCommand(query, conn))
             {
                 cmd.Parameters.Add("?", OdbcType.VarChar).Value = name;
-                await conn.OpenAsync();
-                object res = await cmd.ExecuteScalarAsync();
-                return res?.ToString() ?? "Не найден";
+
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetAccountCreationDateAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    object res = await cmd.ExecuteScalarAsync();
+                    return res?.ToString() ?? "Не найден";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetAccountCreationDateAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
             }
         }
 

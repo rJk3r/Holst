@@ -1,4 +1,5 @@
 ﻿using Holst;
+using Holst.Services;
 using Holst.Stores;
 using Holst.ViewModels;
 using System.Windows;
@@ -11,8 +12,11 @@ namespace Holst
         protected override void OnStartup(StartupEventArgs e)
         {
             NavigationStore navigationStore = new NavigationStore();
+            ProjectStore projectStore = new ProjectStore();
+            AccountStore accountStore = new AccountStore();
+            IAuthorizationService authService = new AuthorizationService("unused");
 
-            navigationStore.CurrentViewModel = new AuthorizationViewModel(navigationStore);
+            navigationStore.CurrentViewModel = new AuthorizationViewModel(navigationStore, projectStore, accountStore, authService);
 
             MainWindow = new MainWindow()
             {
