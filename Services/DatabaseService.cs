@@ -8,6 +8,20 @@ using System.Data.Odbc;
 
 namespace Holst.Services
 {
+    /// <summary>
+    /// Сеанс пользователя для отслеживания контекста в DatabaseService.
+    /// Инкапсулирует информацию о текущем пользователе и его роли.
+    /// </summary>
+    public class UserSession
+    {
+        public string? CurrentUser { get; set; }
+        public string? CurrentRole { get; set; }
+    }
+
+    /// <summary>
+    /// Сервис базы данных с поддержкой сеансов.
+    /// Удалены статические поля — контекст пользователя передаётся через UserSession.
+    /// </summary>
     public class DatabaseService : IDatabaseService
     {
         // Если установлен psqlODBC — попробуйте варианты:
@@ -17,14 +31,44 @@ namespace Holst.Services
         // Для x64-драйвера обычно используется "PostgreSQL Unicode".
         private readonly string _connectionString = "Driver={PostgreSQL Unicode};Server=127.0.0.1;Port=5432;Database=HolstApplication;UID=postgres;PWD=admin;";
 
-        private static string? _currentUser;
-        private static string? _currentRole;
+        /// <summary>
+        /// Текущий сеанс пользователя. Может быть null, если пользователь не авторизован.
+        /// </summary>
+        private UserSession? _currentSession;
 
-        public string? CurrentUser { get => _currentUser; private set => _currentUser = value; }
-        public string? CurrentRole { get => _currentRole; set => _currentRole = value; }
+        public string? CurrentUser { get => _currentSession?.CurrentUser; }
+        public string? CurrentRole { get => _currentSession?.CurrentRole; }
 
         public DatabaseService()
         {
+            _currentSession = new UserSession();
+        }
+
+        /// <summary>
+        /// Устанавливает контекст сеанса пользователя.
+        /// </summary>
+        public void SetUserSession(UserSession session)
+        {
+            _currentSession = session ?? new UserSession();
+        }
+
+        /// <summary>
+        /// Получает текущий сеанс пользователя.
+        /// </summary>
+        public UserSession GetUserSession()
+        {
+            return _currentSession ?? new UserSession();
+        }
+
+        /// <summary>
+        /// Устанавливает роль текущего пользователя (для тестирования и управления сеансом).
+        /// </summary>
+        public void SetCurrentRole(string? role)
+        {
+            if (_currentSession != null)
+            {
+                _currentSession.CurrentRole = role;
+            }
         }
 
         public async System.Threading.Tasks.Task<string> RegisterNewUserAsync(string login, string password)
@@ -88,8 +132,12 @@ namespace Holst.Services
                     object roleResult = await cmd.ExecuteScalarAsync();
                     if (roleResult != null)
                     {
-                        CurrentUser = login;
-                        CurrentRole = roleResult.ToString();
+                        // Обновляем сеанс пользователя
+                        if (_currentSession != null)
+                        {
+                            _currentSession.CurrentUser = login;
+                            _currentSession.CurrentRole = roleResult.ToString();
+                        }
 
                         // Update last activity timestamp
                         string updateQuery = "UPDATE users SET lastactivity = CURRENT_TIMESTAMP WHERE login = ?;";

@@ -2,6 +2,8 @@ using Holst.Models;
 using Holst.Services;
 using Holst.Stores;
 using Holst.ViewModels;
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,10 +17,11 @@ namespace Holst.IntegrationTests
     public class ViewModelIntegrationTests : IntegrationTestBase
     {
         private readonly ITestOutputHelper _output;
-        private NavigationStore _navigationStore;
-        private ProjectStore _projectStore;
-        private AccountStore _accountStore;
-        private IDatabaseService _databaseService;
+        private NavigationStore _navigationStore = null!;
+        private ProjectStore _project_store = null!;
+        private ProjectStore _projectStore = null!;
+        private AccountStore _accountStore = null!;
+        private IDatabaseService _databaseService = null!;
 
         public ViewModelIntegrationTests(ITestOutputHelper output)
         {
@@ -31,7 +34,8 @@ namespace Holst.IntegrationTests
             _navigationStore = new NavigationStore();
             _projectStore = new ProjectStore();
             _accountStore = new AccountStore();
-            _databaseService = new DatabaseServiceProxy();
+            IDatabaseService realDb = new DatabaseService();
+            _databaseService = new DatabaseServiceProxy(realDb);
         }
 
         #region AuthorizationViewModel Tests
@@ -39,11 +43,13 @@ namespace Holst.IntegrationTests
         [Fact]
         public void AuthorizationViewModel_InitialState_IsLoginMode()
         {
+            var validator = new AuthorizationValidator();
+            var authService = new AuthorizationService(_databaseService, validator);
             var vm = new AuthorizationViewModel(
                 _navigationStore,
                 _projectStore,
                 _accountStore,
-                new AuthorizationService("test"),
+                authService,
                 _databaseService);
 
             Assert.False(vm.IsRegistrationMode);
@@ -58,7 +64,7 @@ namespace Holst.IntegrationTests
                 _navigationStore,
                 _projectStore,
                 _accountStore,
-                new AuthorizationService("test"),
+                new AuthorizationService(_databaseService, new AuthorizationValidator()),
                 _databaseService);
 
             vm.RegisterTopCommand.Execute(null);
@@ -75,7 +81,7 @@ namespace Holst.IntegrationTests
                 _navigationStore,
                 _projectStore,
                 _accountStore,
-                new AuthorizationService("test"),
+                new AuthorizationService(_databaseService, new AuthorizationValidator()),
                 _databaseService);
 
             vm.RegisterTopCommand.Execute(null);
@@ -146,7 +152,7 @@ namespace Holst.IntegrationTests
         {
             _accountStore.CurrentAccount = new Account { Name = "TestUser" };
 
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test Project", "TestUser");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test Project", "TestUser");
             _projectStore.AddProject(project);
 
             var vm = new HomeViewModel(
@@ -307,7 +313,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void ProjectEditViewModel_WithCurrentProject_ReturnsProjectTitle()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "My Project", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "My Project", "Author");
             _projectStore.CurrentProject = project;
 
             var vm = new ProjectEditViewModel(
@@ -362,7 +368,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void ProjectEditViewModel_UpdateDocumentBlocks_UpdatesProjectBlocks()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             _projectStore.CurrentProject = project;
 
             var vm = new ProjectEditViewModel(
@@ -417,7 +423,7 @@ namespace Holst.IntegrationTests
             bool raised = false;
             _projectStore.ProjectsChanged += () => raised = true;
 
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             _projectStore.AddProject(project);
 
             Assert.True(raised);
@@ -426,7 +432,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void ProjectStore_RemoveProject_RaisesProjectsChanged()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             _projectStore.AddProject(project);
 
             bool raised = false;
@@ -440,7 +446,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void ProjectStore_AddDuplicateProject_DoesNotAddTwice()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             _projectStore.AddProject(project);
             _projectStore.AddProject(project);
 
@@ -453,7 +459,7 @@ namespace Holst.IntegrationTests
             bool raised = false;
             _projectStore.CurrentProjectChanged += () => raised = true;
 
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             _projectStore.CurrentProject = project;
 
             Assert.True(raised);

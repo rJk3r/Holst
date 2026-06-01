@@ -1,5 +1,7 @@
 using Holst.Services;
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -7,7 +9,7 @@ namespace Holst.IntegrationTests
 {
     /// <summary>
     /// Интеграционные тесты для DatabaseServiceProxy.
-    /// Проверяет корректность работы прокси-слоя, включая проверку прав доступа.
+    /// Проверяет корректность работы прокси-слоя, включая логирование и делегирование.
     /// </summary>
     public class DatabaseServiceProxyTests : IntegrationTestBase
     {
@@ -18,10 +20,18 @@ namespace Holst.IntegrationTests
             _output = output;
         }
 
+        private IDatabaseService CreateDatabaseServiceWithProxy()
+        {
+            IDatabaseService realDb = new DatabaseService();
+            return new DatabaseServiceProxy(realDb);
+        }
+
         [Fact]
         public async Task DeleteUserAsync_AsAdmin_AllowsDeletion()
         {
-            var service = new DatabaseServiceProxy();
+            var realDb = new DatabaseService();
+            var service = new DatabaseServiceProxy(realDb);
+
             var adminName = $"admin_{Guid.NewGuid():N}";
             var userName = $"user_{Guid.NewGuid():N}";
             var password = "TestPass123!";
@@ -30,19 +40,20 @@ namespace Holst.IntegrationTests
             await service.RegisterNewUserAsync(userName, password);
 
             await service.AuthorizeUserAsync(adminName, password);
-            service.CurrentRole = "Admin";
+            realDb.SetCurrentRole("Admin");
 
             var result = await service.DeleteUserAsync(userName);
 
             _output.WriteLine($"Delete as admin result: {result}");
             Assert.DoesNotContain("не админ", result, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("Admin", result);
         }
 
         [Fact]
         public async Task DeleteUserAsync_AsUser_ReturnsNotAdminError()
         {
-            var service = new DatabaseServiceProxy();
+            var realDb = new DatabaseService();
+            var service = new DatabaseServiceProxy(realDb);
+
             var adminName = $"admin2_{Guid.NewGuid():N}";
             var userName = $"user2_{Guid.NewGuid():N}";
             var password = "TestPass123!";
@@ -61,7 +72,9 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task ResetPasswordAsync_AsAdmin_AllowsReset()
         {
-            var service = new DatabaseServiceProxy();
+            var realDb = new DatabaseService();
+            var service = new DatabaseServiceProxy(realDb);
+
             var adminName = $"admin3_{Guid.NewGuid():N}";
             var userName = $"user3_{Guid.NewGuid():N}";
             var password = "TestPass123!";
@@ -70,7 +83,7 @@ namespace Holst.IntegrationTests
             await service.RegisterNewUserAsync(userName, password);
 
             await service.AuthorizeUserAsync(adminName, password);
-            service.CurrentRole = "Admin";
+            realDb.SetCurrentRole("Admin");
 
             var result = await service.ResetPasswordAsync(userName, "NewPass123!");
 
@@ -81,7 +94,9 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task ResetPasswordAsync_AsUser_ReturnsNotAdminError()
         {
-            var service = new DatabaseServiceProxy();
+            var realDb = new DatabaseService();
+            var service = new DatabaseServiceProxy(realDb);
+
             var userName1 = $"user4_{Guid.NewGuid():N}";
             var userName2 = $"user5_{Guid.NewGuid():N}";
             var password = "TestPass123!";
@@ -100,7 +115,9 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task PromoteToAdminAsync_UpdatesRole()
         {
-            var service = new DatabaseServiceProxy();
+            var realDb = new DatabaseService();
+            var service = new DatabaseServiceProxy(realDb);
+
             var username = $"promote_{Guid.NewGuid():N}";
             var password = "TestPass123!";
 
@@ -116,35 +133,21 @@ namespace Holst.IntegrationTests
         }
 
         [Fact]
-        public async Task StaticRole_IsSharedAcrossInstances()
+        public async Task ProxyDelegatesLogging_WithoutChangingBehavior()
         {
-            var service1 = new DatabaseServiceProxy();
-            var service2 = new DatabaseServiceProxy();
-            var username = $"shared_{Guid.NewGuid():N}";
+            var realDb = new DatabaseService();
+            var service = new DatabaseServiceProxy(realDb);
+            var username = $"logging_{Guid.NewGuid():N}";
             var password = "TestPass123!";
 
-            await service1.RegisterNewUserAsync(username, password);
-            await service1.AuthorizeUserAsync(username, password);
+            // Proxy должен логировать операции, но не менять их поведение
+            var regResult = await service.RegisterNewUserAsync(username, password);
+            Assert.NotEmpty(regResult);
 
-            service1.CurrentRole = "Admin";
+            var authResult = await service.AuthorizeUserAsync(username, password);
+            Assert.True(authResult);
 
-            Assert.Equal("Admin", service2.CurrentRole);
-            _output.WriteLine("Static role sharing works correctly");
-        }
-
-        [Fact]
-        public async Task CurrentUser_IsSharedAcrossInstances()
-        {
-            var service1 = new DatabaseServiceProxy();
-            var service2 = new DatabaseServiceProxy();
-            var username = $"shareduser_{Guid.NewGuid():N}";
-            var password = "TestPass123!";
-
-            await service1.RegisterNewUserAsync(username, password);
-            await service1.AuthorizeUserAsync(username, password);
-
-            Assert.Equal(username, service2.CurrentUser);
-            _output.WriteLine("Static user sharing works correctly");
+            _output.WriteLine("Proxy logging delegates correctly");
         }
     }
 }

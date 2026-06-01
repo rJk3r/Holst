@@ -77,7 +77,8 @@ namespace Holst.Services
             var created = DateTime.FromBinary(reader.ReadInt64());
             var updated = DateTime.FromBinary(reader.ReadInt64());
 
-            var project = ProjectFactory.CreateProject(type, name, author);
+            // Используем ProjectFactoryExtensions.Create() вместо ProjectFactory.CreateProject()
+            var project = ProjectFactoryExtensions.Create(type, name, author);
             project.Id = id;
             project.FilePath = filePath;
             project.CreatedAt = created;

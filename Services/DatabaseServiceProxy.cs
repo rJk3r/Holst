@@ -7,114 +7,143 @@ using System.Threading.Tasks;
 
 namespace Holst.Services
 {
+    /// <summary>
+    /// Proxy Pattern: оборачивает IDatabaseService для логирования операций.
+    /// Делегирует все вызовы реальному сервису без изменения поведения.
+    /// </summary>
     public class DatabaseServiceProxy : IDatabaseService
     {
-        // Incapsualte the DbService obj
-        private DatabaseService _realService = null!;
+        private readonly IDatabaseService _realService;
 
-
-        // Duplicate the proterties for normal interface
-        public string? CurrentUser => _realService?.CurrentUser;
-        public string? CurrentRole => _realService?.CurrentRole;
-
-        public DatabaseServiceProxy() { }
-
-        // Вспомогательный метод ленивой инициализации
-        private DatabaseService GetRealService()
+        /// <summary>
+        /// Инжектируем реальный сервис через конструктор (вместо создания внутри).
+        /// </summary>
+        public DatabaseServiceProxy(IDatabaseService realService)
         {
-            if (_realService == null)
+            _realService = realService ?? throw new ArgumentNullException(nameof(realService));
+        }
+
+        public string? CurrentUser => _realService.CurrentUser;
+        public string? CurrentRole => _realService.CurrentRole;
+
+        public async Task<string> RegisterNewUserAsync(string login, string password)
+        {
+            Debug.WriteLine($"[LOG] User registration attempt: {login}");
+            try
             {
-                _realService = new DatabaseService();
+                var result = await _realService.RegisterNewUserAsync(login, password);
+                Debug.WriteLine($"[LOG] User registration result: {result}");
+                return result;
             }
-            return _realService;
-        }
-
-
-        // Async API implementations
-        public async System.Threading.Tasks.Task<string> RegisterNewUserAsync(string login, string password)
-        {
-            Debug.WriteLine($"[LOG] User reg try: {login}");
-            var service = GetRealService();
-            return await service.RegisterNewUserAsync(login, password);
-        }
-
-        public async System.Threading.Tasks.Task<bool> AuthorizeUserAsync(string login, string password)
-        {
-            var service = GetRealService();
-            bool isSuccess = await service.AuthorizeUserAsync(login, password);
-            Debug.WriteLine($"[LOG] Authorize user '{login}': {(isSuccess ? "t" : "f")}");
-            return isSuccess;
-        }
-
-        public async System.Threading.Tasks.Task<string> DeleteUserAsync(string targetName)
-        {
-            Debug.WriteLine($"[LOG] Check perms to remove target: {targetName}...");
-            var service = GetRealService();
-
-            // Get perms to exec command
-            if (service.CurrentRole != "Admin")
+            catch (Exception ex)
             {
-                return "Error. You are not an Admin!";
+                Debug.WriteLine($"[LOG] User registration error: {ex.Message}");
+                throw;
             }
-
-            return await service.DeleteUserAsync(targetName);
         }
 
-        public async System.Threading.Tasks.Task<bool> CheckPasswordAsync(string password)
+        public async Task<bool> AuthorizeUserAsync(string login, string password)
         {
-            Debug.WriteLine($"[LOG] Get pwd for current target ({CurrentUser}).");
-            var service = GetRealService();
-            return await service.CheckPasswordAsync(password);
-        }
-
-        public async System.Threading.Tasks.Task<string> GetUserNameAsync(string name)
-        {
-            var service = GetRealService();
-            return await service.GetUserNameAsync(name);
-        }
-
-        public async System.Threading.Tasks.Task<string> GetAccountCreationDateAsync(string name)
-        {
-            var service = GetRealService();
-            return await service.GetAccountCreationDateAsync(name);
-        }
-
-        public async System.Threading.Tasks.Task<string> PromoteToAdminAsync(string login)
-        {
-            Debug.WriteLine($"[LOG] Promote to admin: {login}");
-            var service = GetRealService();
-            var result = await service.PromoteToAdminAsync(login);
-            if (service.CurrentUser == login && (result.Contains("успешно", StringComparison.OrdinalIgnoreCase) || result.Contains("success", StringComparison.OrdinalIgnoreCase)))
+            Debug.WriteLine($"[LOG] Authorization attempt for user: {login}");
+            try
             {
-                service.CurrentRole = "Admin";
+                bool result = await _realService.AuthorizeUserAsync(login, password);
+                Debug.WriteLine($"[LOG] Authorization result for '{login}': {(result ? "success" : "failed")}");
+                return result;
             }
-            return result;
-        }
-
-        public async System.Threading.Tasks.Task<string> ResetPasswordAsync(string login, string newPassword)
-        {
-            Debug.WriteLine($"[LOG] Reset password for: {login}");
-            var service = GetRealService();
-
-            if (service.CurrentRole != "Admin")
+            catch (Exception ex)
             {
-                return "Error. You are not an Admin!";
+                Debug.WriteLine($"[LOG] Authorization error: {ex.Message}");
+                throw;
             }
-
-            return await service.ResetPasswordAsync(login, newPassword);
         }
 
-        public async System.Threading.Tasks.Task<string> GetLastActivityAsync(string login)
+        public async Task<string> DeleteUserAsync(string targetName)
         {
-            var service = GetRealService();
-            return await service.GetLastActivityAsync(login);
+            Debug.WriteLine($"[LOG] Delete user attempt: {targetName}");
+            try
+            {
+                var result = await _realService.DeleteUserAsync(targetName);
+                Debug.WriteLine($"[LOG] Delete user result: {result}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LOG] Delete user error: {ex.Message}");
+                throw;
+            }
         }
 
-        public async System.Threading.Tasks.Task<string> GetUserRoleAsync(string login)
+        public async Task<bool> CheckPasswordAsync(string password)
         {
-            var service = GetRealService();
-            return await service.GetUserRoleAsync(login);
+            Debug.WriteLine($"[LOG] Password check for user: {CurrentUser}");
+            try
+            {
+                bool result = await _realService.CheckPasswordAsync(password);
+                Debug.WriteLine($"[LOG] Password check result: {(result ? "match" : "no match")}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LOG] Password check error: {ex.Message}");
+                throw;
+            }
         }
 
+        public async Task<string> GetUserNameAsync(string name)
+        {
+            Debug.WriteLine($"[LOG] Getting user name: {name}");
+            return await _realService.GetUserNameAsync(name);
+        }
+
+        public async Task<string> GetAccountCreationDateAsync(string name)
+        {
+            Debug.WriteLine($"[LOG] Getting account creation date for: {name}");
+            return await _realService.GetAccountCreationDateAsync(name);
+        }
+
+        public async Task<string> PromoteToAdminAsync(string login)
+        {
+            Debug.WriteLine($"[LOG] Promoting user to admin: {login}");
+            try
+            {
+                var result = await _realService.PromoteToAdminAsync(login);
+                Debug.WriteLine($"[LOG] Promotion result: {result}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LOG] Promotion error: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<string> ResetPasswordAsync(string login, string newPassword)
+        {
+            Debug.WriteLine($"[LOG] Resetting password for: {login}");
+            try
+            {
+                var result = await _realService.ResetPasswordAsync(login, newPassword);
+                Debug.WriteLine($"[LOG] Password reset result: {result}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LOG] Password reset error: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<string> GetLastActivityAsync(string login)
+        {
+            Debug.WriteLine($"[LOG] Getting last activity for: {login}");
+            return await _realService.GetLastActivityAsync(login);
+        }
+
+        public async Task<string> GetUserRoleAsync(string login)
+        {
+            Debug.WriteLine($"[LOG] Getting user role for: {login}");
+            return await _realService.GetUserRoleAsync(login);
+        }
     }
 }

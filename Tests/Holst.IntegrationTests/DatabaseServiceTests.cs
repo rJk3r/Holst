@@ -1,5 +1,7 @@
 using Holst.Services;
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -150,7 +152,7 @@ namespace Holst.IntegrationTests
             await service.RegisterNewUserAsync(username, password);
             await service.AuthorizeUserAsync(username, password);
 
-            service.CurrentRole = "Admin";
+            service.SetCurrentRole("Admin");
 
             Assert.Equal("Admin", service.CurrentRole);
         }

@@ -364,64 +364,7 @@ namespace Holst.Views
             }
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is not ProjectEditViewModel vm) return;
-
-            var blocks = ParseDocumentBlocks();
-            vm.UpdateDocumentBlocks(blocks);
-            vm.SaveProjectCommand.Execute(null);
-        }
-
-        private List<DocumentBlock> ParseDocumentBlocks()
-        {
-            var blocks = new List<DocumentBlock>();
-
-            foreach (var block in EditorRichTextBox.Document.Blocks.OfType<Paragraph>())
-            {
-                var textRange = new TextRange(block.ContentStart, block.ContentEnd);
-                string text = textRange.Text;
-                string trimmed = text.TrimStart();
-                string trimmedFull = text.Trim();
-
-                if (string.IsNullOrWhiteSpace(text))
-                {
-                    blocks.Add(new ParagraphBlock { Text = text });
-                    continue;
-                }
-
-                if (trimmed.StartsWith("```"))
-                {
-                    blocks.Add(new CodeBlock { Text = trimmedFull });
-                    continue;
-                }
-
-                if (trimmed.StartsWith("---") || trimmed.StartsWith("***") || trimmed.StartsWith("___"))
-                {
-                    blocks.Add(new ParagraphBlock { Text = trimmedFull });
-                    continue;
-                }
-
-                if (trimmed.StartsWith("### "))
-                {
-                    blocks.Add(new HeaderBlock { Level = 3, Text = trimmedFull.Substring(4).TrimEnd('\r', '\n') });
-                }
-                else if (trimmed.StartsWith("## "))
-                {
-                    blocks.Add(new HeaderBlock { Level = 2, Text = trimmedFull.Substring(3).TrimEnd('\r', '\n') });
-                }
-                else if (trimmed.StartsWith("# "))
-                {
-                    blocks.Add(new HeaderBlock { Level = 1, Text = trimmedFull.Substring(2).TrimEnd('\r', '\n') });
-                }
-                else
-                {
-                    blocks.Add(new ParagraphBlock { Text = text });
-                }
-            }
-
-            return blocks;
-        }
+        // Document parsing and save are handled in ProjectEditViewModel to keep view free of business logic.
 
         private void EditorRichTextBox_LostFocus(object sender, RoutedEventArgs e)
         {

@@ -14,10 +14,16 @@ namespace Holst.Services
     public class AuthorizationService : IAuthorizationService
     {
         private readonly IDatabaseService _db;
+        private readonly IAuthorizationValidator _validator;
 
-        public AuthorizationService(string connectionString)
+        /// <summary>
+        /// Инжектируем сервисы через конструктор (Dependency Injection).
+        /// DatabaseService приходит уже обёрнутый в Proxy.
+        /// </summary>
+        public AuthorizationService(IDatabaseService databaseService, IAuthorizationValidator validator)
         {
-            _db = new DatabaseServiceProxy();
+            _db = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         }
 
         public async Task<RegistrationResult> Register(string email, string username, string password, string confirmPassword)
@@ -45,7 +51,7 @@ namespace Holst.Services
             return RegistrationResult.Success;
         }
 
-        public async Task<Account> Login(string username, string password)
+        public async Task<Account?> Login(string username, string password)
         {
             bool ok = await _db.AuthorizeUserAsync(username, password);
             if (!ok) return null;
@@ -69,7 +75,9 @@ namespace Holst.Services
             return account;
         }
 
-        // Helper: get account info by username
+        /// <summary>
+        /// Получить информацию об аккаунте по имени пользователя.
+        /// </summary>
         public async Task<Account?> GetAccountByUsernameAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return null;
@@ -93,5 +101,43 @@ namespace Holst.Services
             };
         }
 
+        /// <summary>
+        /// Удалить пользователя (с проверкой прав).
+        /// </summary>
+        public async Task<string> DeleteUserAsync(string targetUsername)
+        {
+            if (!_validator.CanDeleteUser(_db.CurrentRole))
+            {
+                return "Ошибка: у вас недостаточно прав для удаления пользователя.";
+            }
+
+            return await _db.DeleteUserAsync(targetUsername);
+        }
+
+        /// <summary>
+        /// Повысить пользователя до администратора (с проверкой прав).
+        /// </summary>
+        public async Task<string> PromoteToAdminAsync(string username)
+        {
+            if (!_validator.CanPromoteToAdmin(_db.CurrentRole))
+            {
+                return "Ошибка: у вас недостаточно прав для повышения пользователя.";
+            }
+
+            return await _db.PromoteToAdminAsync(username);
+        }
+
+        /// <summary>
+        /// Сбросить пароль пользователя (с проверкой прав).
+        /// </summary>
+        public async Task<string> ResetPasswordAsync(string username, string newPassword)
+        {
+            if (!_validator.CanResetPassword(_db.CurrentRole))
+            {
+                return "Ошибка: у вас недостаточно прав для сброса паролей.";
+            }
+
+            return await _db.ResetPasswordAsync(username, newPassword);
+        }
     }
 }

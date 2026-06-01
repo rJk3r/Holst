@@ -1,5 +1,8 @@
 using Holst.Models;
+using System;
+using System.IO;
 using System.Text;
+using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -367,7 +370,7 @@ namespace Holst.IntegrationTests
         [InlineData(ProjectType.Graph, typeof(GraphProject))]
         public void ProjectFactory_CreateProject_ReturnsCorrectType(ProjectType type, Type expectedType)
         {
-            var project = ProjectFactory.CreateProject(type, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(type, "Test", "Author");
 
             Assert.IsType(expectedType, project);
         }
@@ -375,7 +378,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void ProjectFactory_CreateTextProject_SetsProperties()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "My Project", "Test Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "My Project", "Test Author");
 
             Assert.Equal("My Project", project.Name);
             Assert.Equal("Test Author", project.Author);
@@ -385,7 +388,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void ProjectFactory_CreateGraphProject_SetsProperties()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Graph, "Graph View", "Graph Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Graph, "Graph View", "Graph Author");
 
             Assert.Equal("Graph View", project.Name);
             Assert.Equal("Graph Author", project.Author);
@@ -395,8 +398,8 @@ namespace Holst.IntegrationTests
         [Fact]
         public void ProjectFactory_CreateProject_GeneratesUniqueId()
         {
-            var p1 = ProjectFactory.CreateProject(ProjectType.Text, "P1", "A");
-            var p2 = ProjectFactory.CreateProject(ProjectType.Text, "P2", "A");
+            var p1 = ProjectFactoryExtensions.Create(ProjectType.Text, "P1", "A");
+            var p2 = ProjectFactoryExtensions.Create(ProjectType.Text, "P2", "A");
 
             Assert.NotEqual(p1.Id, p2.Id);
         }
@@ -405,7 +408,7 @@ namespace Holst.IntegrationTests
         public void ProjectFactory_CreateProject_SetsCreationDate()
         {
             var before = DateTime.UtcNow;
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             var after = DateTime.UtcNow;
 
             Assert.True(project.CreatedAt >= before);
@@ -419,7 +422,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void BaseProject_SetFilePath_StoredCorrectly()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             var path = @"C:\Projects\test.holst";
 
             project.FilePath = path;
@@ -430,7 +433,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void BaseProject_DefaultFilePath_IsEmpty()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
 
             Assert.Equal(string.Empty, project.FilePath);
         }
@@ -438,7 +441,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public void BaseProject_UpdatedAt_ChangesOnModification()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test", "Author");
             var before = project.UpdatedAt;
 
             Thread.Sleep(50);

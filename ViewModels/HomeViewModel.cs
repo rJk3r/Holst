@@ -38,7 +38,8 @@ namespace Holst.ViewModels
             });
             CreateProjectCommand = new RelayCommand(() =>
             {
-                var project = ProjectFactory.CreateProject(ProjectType.Text, "Новый проект", accountStore.CurrentAccount?.Name ?? "User");
+                // Используем ProjectFactoryExtensions.Create() для совместимости
+                var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Новый проект", accountStore.CurrentAccount?.Name ?? "User");
                 var dir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Projects");
                 System.IO.Directory.CreateDirectory(dir);
                 project.FilePath = System.IO.Path.Combine(dir, $"{project.Name}_{project.Id:N}.holst");

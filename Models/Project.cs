@@ -144,9 +144,32 @@ namespace Holst.Models
 
     #region ProjectFactory
 
-    public static class ProjectFactory
+    /// <summary>
+    /// Factory Method Pattern: интерфейс для создания проектов различных типов.
+    /// Позволяет подменять реализацию для тестирования и расширяемости.
+    /// </summary>
+    public interface IProjectFactory
     {
-        public static BaseProject CreateProject(ProjectType type, string name, string author)
+        /// <summary>
+        /// Создаёт проект указанного типа с заданными именем и автором.
+        /// </summary>
+        /// <param name="type">Тип проекта (Text, Graph, Canvas, Diagram)</param>
+        /// <param name="name">Имя проекта</param>
+        /// <param name="author">Автор проекта</param>
+        /// <returns>Созданный проект указанного типа</returns>
+        /// <exception cref="ArgumentException">Если тип проекта не поддерживается</exception>
+        BaseProject CreateProject(ProjectType type, string name, string author);
+    }
+
+    /// <summary>
+    /// Стандартная реализация Factory Method для создания проектов.
+    /// </summary>
+    public class ProjectFactory : IProjectFactory
+    {
+        /// <summary>
+        /// Создаёт проект указанного типа.
+        /// </summary>
+        public BaseProject CreateProject(ProjectType type, string name, string author)
         {
             BaseProject project = type switch
             {
@@ -154,12 +177,39 @@ namespace Holst.Models
                 ProjectType.Graph => new GraphProject(),
                 //ProjectType.Canvas => new CanvasProject(),
                 //ProjectType.Diagram => new DiagramProject(),
-                _ => throw new ArgumentException("Неизвестный тип проекта")
+                _ => throw new ArgumentException($"Неизвестный тип проекта: {type}")
             };
 
             project.Name = name;
             project.Author = author;
+            project.CreatedAt = DateTime.UtcNow;
+            project.UpdatedAt = DateTime.UtcNow;
+
             return project;
+        }
+    }
+
+    /// <summary>
+    /// Статический фасад для обратной совместимости с кодом, использующим ProjectFactory.CreateProject().
+    /// </summary>
+    public static class ProjectFactoryExtensions
+    {
+        private static IProjectFactory _factory = new ProjectFactory();
+
+        /// <summary>
+        /// Устанавливает фабрику проектов (для тестирования).
+        /// </summary>
+        public static void SetFactory(IProjectFactory factory)
+        {
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+        }
+
+        /// <summary>
+        /// Создаёт проект через текущую фабрику.
+        /// </summary>
+        public static BaseProject Create(ProjectType type, string name, string author)
+        {
+            return _factory.CreateProject(type, name, author);
         }
     }
     #endregion

@@ -1,5 +1,8 @@
 using Holst.Models;
 using Holst.Services;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -25,7 +28,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task SaveAndLoad_TextProject_RoundtripSuccess()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test Text Project", "TestAuthor");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test Text Project", "TestAuthor");
             var textProject = (TextProject)project;
             textProject.Blocks.Add(new ParagraphBlock { Text = "First paragraph" });
             textProject.Blocks.Add(new HeaderBlock { Level = 1, Text = "Main Header" });
@@ -51,7 +54,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task LoadProject_TextProject_ContentBlocksPreserved()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Content Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Content Test", "Author");
             var textProject = (TextProject)project;
             textProject.Blocks.Add(new HeaderBlock { Level = 2, Text = "H2 Header" });
             textProject.Blocks.Add(new ParagraphBlock { Text = "Paragraph content" });
@@ -84,7 +87,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task SaveAndLoad_GraphProject_RoundtripSuccess()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Graph, "Test Graph Project", "TestAuthor");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Graph, "Test Graph Project", "TestAuthor");
             var filePath = Path.Combine(ProjectsDirectory, $"graph_{Guid.NewGuid():N}.holst");
 
             var saved = await _service.SaveProjectAsync(project, filePath);
@@ -104,7 +107,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task SavedProject_HasCorrectFileExtension()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Ext Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Ext Test", "Author");
             var filePath = Path.Combine(ProjectsDirectory, $"wrong_ext.txt");
 
             await _service.SaveProjectAsync(project, filePath);
@@ -115,7 +118,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task SavedProject_IsEncrypted()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Encryption Test", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Encryption Test", "Author");
             var filePath = Path.Combine(ProjectsDirectory, "encrypted.holst");
 
             await _service.SaveProjectAsync(project, filePath);
@@ -160,7 +163,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task ProjectMetadata_PreservedAfterRoundtrip()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Metadata Test", "TestAuthor");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Metadata Test", "TestAuthor");
             project.FilePath = Path.Combine(ProjectsDirectory, "meta.holst");
             var createdBefore = project.CreatedAt;
             var updatedBefore = project.UpdatedAt;
@@ -181,8 +184,8 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task ProjectId_UniquePerProject()
         {
-            var project1 = ProjectFactory.CreateProject(ProjectType.Text, "Project 1", "Author");
-            var project2 = ProjectFactory.CreateProject(ProjectType.Text, "Project 2", "Author");
+            var project1 = ProjectFactoryExtensions.Create(ProjectType.Text, "Project 1", "Author");
+            var project2 = ProjectFactoryExtensions.Create(ProjectType.Text, "Project 2", "Author");
 
             var path1 = Path.Combine(ProjectsDirectory, "id1.holst");
             var path2 = Path.Combine(ProjectsDirectory, "id2.holst");
@@ -203,7 +206,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task EmptyTextProject_SaveAndLoad_Success()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Empty Project", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Empty Project", "Author");
             var filePath = Path.Combine(ProjectsDirectory, "empty.holst");
 
             var saved = await _service.SaveProjectAsync(project, filePath);
@@ -223,7 +226,7 @@ namespace Holst.IntegrationTests
         [Fact]
         public async Task SaveMultipleTimes_SamePath_OverwritesFile()
         {
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Version 1", "Author");
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Version 1", "Author");
             var filePath = Path.Combine(ProjectsDirectory, "versioned.holst");
 
             await _service.SaveProjectAsync(project, filePath);

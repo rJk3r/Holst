@@ -56,7 +56,8 @@
                         Style="{StaticResource PrimaryButton}" 
                         Width="160" Height="45" Margin="0,0,10,0"/>
                 <Button Content="Сохранить" 
-                        Click="SaveButton_Click" 
+                        Command="{Binding SaveProjectCommand}"
+                        CommandParameter="{Binding ElementName=EditorRichTextBox, Path=Document}"
                         Style="{StaticResource PrimaryButton}" 
                         Width="120" Height="45"/>
                 <TextBlock Text="{Binding ProjectTitle}" 

@@ -86,7 +86,8 @@ namespace Holst.ViewModels
             NavigateProjectEditCommand = new NavigateCommand<ProjectEditViewModel>(navigationStore, () => new ProjectEditViewModel(navigationStore, projectStore, accountStore, databaseService));
             CreateProjectCommand = new RelayCommand(() =>
             {
-                var project = Holst.Models.ProjectFactory.CreateProject(Holst.Models.ProjectType.Text, "Новый проект", accountStore.CurrentAccount?.Name ?? "User");
+                // Используем ProjectFactoryExtensions.Create() вместо ProjectFactory.CreateProject()
+                var project = Holst.Models.ProjectFactoryExtensions.Create(Holst.Models.ProjectType.Text, "Новый проект", accountStore.CurrentAccount?.Name ?? "User");
                 var dir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Projects");
                 System.IO.Directory.CreateDirectory(dir);
                 project.FilePath = System.IO.Path.Combine(dir, $"{project.Name}_{project.Id:N}.holst");

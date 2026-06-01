@@ -7,6 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Input;
+using System.Text.RegularExpressions;
+using System.Windows.Documents;
+using System.Linq;
 
 namespace Holst.ViewModels
 {
@@ -50,7 +53,7 @@ namespace Holst.ViewModels
 
             NavigateHomeCommand = new NavigateCommand<HomeViewModel>(navigationStore, () => new HomeViewModel(navigationStore, projectStore, accountStore, databaseService));
             NavigateAccountCommand = new NavigateCommand<AccountViewModel>(navigationStore, () => new AccountViewModel(navigationStore, projectStore, accountStore, databaseService));
-            SaveProjectCommand = new RelayCommand(OnSave);
+            SaveProjectCommand = new RelayCommand<FlowDocument>(OnSave);
             ImportProjectCommand = new RelayCommand(OnImport);
             ExportProjectCommand = new RelayCommand(OnExport);
         }
@@ -64,12 +67,24 @@ namespace Holst.ViewModels
             }
         }
 
-        private async void OnSave()
+        private async void OnSave(FlowDocument document)
         {
             var project = _projectStore.CurrentProject;
             if (project == null)
             {
                 StatusMessage = "Нет активного проекта для сохранения.";
+                return;
+            }
+
+            // parse blocks from provided FlowDocument and update project's content
+            try
+            {
+                var blocks = ParseDocumentBlocks(document);
+                UpdateDocumentBlocks(blocks);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Ошибка при подготовке документа: {ex.Message}";
                 return;
             }
 
@@ -95,6 +110,56 @@ namespace Holst.ViewModels
             {
                 StatusMessage = "Ошибка при сохранении файла.";
             }
+        }
+
+        private List<DocumentBlock> ParseDocumentBlocks(FlowDocument document)
+        {
+            var blocks = new List<DocumentBlock>();
+
+            foreach (var block in document.Blocks.OfType<Paragraph>())
+            {
+                var textRange = new TextRange(block.ContentStart, block.ContentEnd);
+                string text = textRange.Text;
+                string trimmed = text.TrimStart();
+                string trimmedFull = text.Trim();
+
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    blocks.Add(new ParagraphBlock { Text = text });
+                    continue;
+                }
+
+                if (trimmed.StartsWith("```"))
+                {
+                    blocks.Add(new CodeBlock { Text = trimmedFull });
+                    continue;
+                }
+
+                if (trimmed.StartsWith("---") || trimmed.StartsWith("***") || trimmed.StartsWith("___"))
+                {
+                    blocks.Add(new ParagraphBlock { Text = trimmedFull });
+                    continue;
+                }
+
+                if (trimmed.StartsWith("### "))
+                {
+                    blocks.Add(new HeaderBlock { Level = 3, Text = trimmedFull.Substring(4).TrimEnd('\r', '\n') });
+                }
+                else if (trimmed.StartsWith("## "))
+                {
+                    blocks.Add(new HeaderBlock { Level = 2, Text = trimmedFull.Substring(3).TrimEnd('\r', '\n') });
+                }
+                else if (trimmed.StartsWith("# "))
+                {
+                    blocks.Add(new HeaderBlock { Level = 1, Text = trimmedFull.Substring(2).TrimEnd('\r', '\n') });
+                }
+                else
+                {
+                    blocks.Add(new ParagraphBlock { Text = text });
+                }
+            }
+
+            return blocks;
         }
 
         private async void OnImport()

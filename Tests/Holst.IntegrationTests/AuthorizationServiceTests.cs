@@ -1,5 +1,7 @@
 using Holst.Models;
 using Holst.Services;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,11 +15,14 @@ namespace Holst.IntegrationTests
     {
         private readonly ITestOutputHelper _output;
         private readonly IAuthorizationService _authService;
+        private readonly IDatabaseService _databaseService;
 
         public AuthorizationServiceTests(ITestOutputHelper output)
         {
             _output = output;
-            _authService = new AuthorizationService("test_connection");
+            _databaseService = new DatabaseService();
+            IAuthorizationValidator validator = new AuthorizationValidator();
+            _authService = new AuthorizationService(_databaseService, validator);
         }
 
         #region Registration Tests
@@ -210,7 +215,7 @@ namespace Holst.IntegrationTests
             Assert.NotNull(account);
 
             var projectStore = new Stores.ProjectStore();
-            var project = ProjectFactory.CreateProject(ProjectType.Text, "Test Project", account.Name);
+            var project = ProjectFactoryExtensions.Create(ProjectType.Text, "Test Project", account.Name);
             projectStore.AddProject(project);
             projectStore.CurrentProject = project;
 
@@ -277,9 +282,10 @@ namespace Holst.IntegrationTests
             await _authService.Register("test@email.com", username, oldPassword, oldPassword);
             await _authService.Login(username, oldPassword);
 
-            var dbService = new DatabaseServiceProxy();
+            var realDb = new DatabaseService();
+            var dbService = new DatabaseServiceProxy(realDb);
             await dbService.AuthorizeUserAsync(username, oldPassword);
-            dbService.CurrentRole = "Admin";
+            realDb.SetCurrentRole("Admin");
             await dbService.ResetPasswordAsync(username, newPassword);
 
             var withOld = await _authService.Login(username, oldPassword);
