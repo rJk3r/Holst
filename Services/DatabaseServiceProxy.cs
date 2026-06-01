@@ -10,7 +10,7 @@ namespace Holst.Services
     public class DatabaseServiceProxy : IDatabaseService
     {
         // Incapsualte the DbService obj
-        private DatabaseService _realService;
+        private DatabaseService _realService = null!;
 
 
         // Duplicate the proterties for normal interface
@@ -77,6 +77,43 @@ namespace Holst.Services
         {
             var service = GetRealService();
             return await service.GetAccountCreationDateAsync(name);
+        }
+
+        public async System.Threading.Tasks.Task<string> PromoteToAdminAsync(string login)
+        {
+            Debug.WriteLine($"[LOG] Promote to admin: {login}");
+            var service = GetRealService();
+            var result = await service.PromoteToAdminAsync(login);
+            if (service.CurrentUser == login && (result.Contains("успешно", StringComparison.OrdinalIgnoreCase) || result.Contains("success", StringComparison.OrdinalIgnoreCase)))
+            {
+                service.CurrentRole = "Admin";
+            }
+            return result;
+        }
+
+        public async System.Threading.Tasks.Task<string> ResetPasswordAsync(string login, string newPassword)
+        {
+            Debug.WriteLine($"[LOG] Reset password for: {login}");
+            var service = GetRealService();
+
+            if (service.CurrentRole != "Admin")
+            {
+                return "Error. You are not an Admin!";
+            }
+
+            return await service.ResetPasswordAsync(login, newPassword);
+        }
+
+        public async System.Threading.Tasks.Task<string> GetLastActivityAsync(string login)
+        {
+            var service = GetRealService();
+            return await service.GetLastActivityAsync(login);
+        }
+
+        public async System.Threading.Tasks.Task<string> GetUserRoleAsync(string login)
+        {
+            var service = GetRealService();
+            return await service.GetUserRoleAsync(login);
         }
 
     }

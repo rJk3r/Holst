@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,11 +12,15 @@ namespace Holst.Models
     public abstract class BaseProject
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        public string Author { get; set; }
+        public string Author { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
         public abstract ProjectType Type { get; }
+
+        protected internal virtual void SerializeContent(BinaryWriter writer) { }
+        protected internal virtual void DeserializeContent(BinaryReader reader) { }
     }
 
     #region Text project
@@ -28,17 +33,93 @@ namespace Holst.Models
     public class HeaderBlock : DocumentBlock
     {
         public int Level { get; set; } // # - 1; ## - 2; ### - 3
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty;
     }
 
     public class ParagraphBlock : DocumentBlock
     {
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty;
+    }
+
+    public class CodeBlock : DocumentBlock
+    {
+        public string Text { get; set; } = string.Empty;
+        public string Language { get; set; } = string.Empty;
     }
 
     public class TextProject : BaseProject
     {
         public override ProjectType Type => ProjectType.Text;
+        public List<DocumentBlock> Blocks { get; set; } = new List<DocumentBlock>();
+
+        protected internal override void SerializeContent(BinaryWriter writer)
+        {
+            writer.Write(Blocks?.Count ?? 0);
+            if (Blocks == null) return;
+            foreach (var block in Blocks)
+            {
+                writer.Write(block.Id ?? Guid.NewGuid().ToString());
+                if (block is HeaderBlock h)
+                {
+                    writer.Write(0);
+                    writer.Write(h.Level);
+                    writer.Write(h.Text ?? string.Empty);
+                }
+                else if (block is ParagraphBlock p)
+                {
+                    writer.Write(1);
+                    writer.Write(p.Text ?? string.Empty);
+                }
+                else if (block is CodeBlock c)
+                {
+                    writer.Write(2);
+                    writer.Write(c.Language ?? string.Empty);
+                    writer.Write(c.Text ?? string.Empty);
+                }
+                else
+                {
+                    writer.Write(1);
+                    writer.Write(block.ToString() ?? string.Empty);
+                }
+            }
+        }
+
+        protected internal override void DeserializeContent(BinaryReader reader)
+        {
+            int count = reader.ReadInt32();
+            Blocks = new List<DocumentBlock>(count);
+            for (int i = 0; i < count; i++)
+            {
+                string id = reader.ReadString();
+                int type = reader.ReadInt32();
+                if (type == 0)
+                {
+                    Blocks.Add(new HeaderBlock
+                    {
+                        Id = id,
+                        Level = reader.ReadInt32(),
+                        Text = reader.ReadString()
+                    });
+                }
+                else if (type == 2)
+                {
+                    Blocks.Add(new CodeBlock
+                    {
+                        Id = id,
+                        Language = reader.ReadString(),
+                        Text = reader.ReadString()
+                    });
+                }
+                else
+                {
+                    Blocks.Add(new ParagraphBlock
+                    {
+                        Id = id,
+                        Text = reader.ReadString()
+                    });
+                }
+            }
+        }
     }
 
     public class GraphProject : TextProject
@@ -50,8 +131,8 @@ namespace Holst.Models
 
     public class GraphEdge
     {
-        public string SourceHeaderId { get; set; }
-        public string TargetHeaderId { get; set; }
+        public string SourceHeaderId { get; set; } = string.Empty;
+        public string TargetHeaderId { get; set; } = string.Empty;
     }
     #endregion
 

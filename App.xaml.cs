@@ -15,8 +15,9 @@ namespace Holst
             ProjectStore projectStore = new ProjectStore();
             AccountStore accountStore = new AccountStore();
             IAuthorizationService authService = new AuthorizationService("unused");
+            IDatabaseService databaseService = new DatabaseServiceProxy();
 
-            navigationStore.CurrentViewModel = new AuthorizationViewModel(navigationStore, projectStore, accountStore, authService);
+            navigationStore.CurrentViewModel = new AuthorizationViewModel(navigationStore, projectStore, accountStore, authService, databaseService);
 
             MainWindow = new MainWindow()
             {

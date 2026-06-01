@@ -8,8 +8,6 @@ namespace Holst.Services
 {
     public interface IDatabaseService
     {
-
-        
         // Here we can get user and their role
         string? CurrentUser { get; }
         string? CurrentRole { get; }
@@ -31,5 +29,17 @@ namespace Holst.Services
 
         // Тут всё из названия понятно, получить дату создания аккаунта по имени (async)
         System.Threading.Tasks.Task<string> GetAccountCreationDateAsync(string name);
+
+        // Повысить пользователя до администратора
+        System.Threading.Tasks.Task<string> PromoteToAdminAsync(string login);
+
+        // Сбросить пароль пользователя
+        System.Threading.Tasks.Task<string> ResetPasswordAsync(string login, string newPassword);
+
+        // Получить дату последней активности
+        System.Threading.Tasks.Task<string> GetLastActivityAsync(string login);
+
+        // Получить роль пользователя
+        System.Threading.Tasks.Task<string> GetUserRoleAsync(string login);
     }
 }

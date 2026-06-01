@@ -54,8 +54,10 @@ namespace Holst.Services
             writer.Write((int)project.Type);                 // 4 bytes
             writer.Write(project.Name ?? string.Empty);      // length-prefixed UTF-8
             writer.Write(project.Author ?? string.Empty);    // length-prefixed UTF-8
+            writer.Write(project.FilePath ?? string.Empty);
             writer.Write(project.CreatedAt.ToBinary());      // 8 bytes
             writer.Write(project.UpdatedAt.ToBinary());      // 8 bytes
+            project.SerializeContent(writer);
             writer.Flush();
             return ms.ToArray();
         }
@@ -68,13 +70,21 @@ namespace Holst.Services
             var type = (ProjectType)reader.ReadInt32();
             var name = reader.ReadString();
             var author = reader.ReadString();
-            var created = System.DateTime.FromBinary(reader.ReadInt64());
-            var updated = System.DateTime.FromBinary(reader.ReadInt64());
+
+            string filePath = string.Empty;
+            try { filePath = reader.ReadString(); } catch { /* старый формат без пути */ }
+
+            var created = DateTime.FromBinary(reader.ReadInt64());
+            var updated = DateTime.FromBinary(reader.ReadInt64());
 
             var project = ProjectFactory.CreateProject(type, name, author);
             project.Id = id;
+            project.FilePath = filePath;
             project.CreatedAt = created;
             project.UpdatedAt = updated;
+
+            try { project.DeserializeContent(reader); } catch { /* старый формат без блоков */ }
+
             return project;
         }
 

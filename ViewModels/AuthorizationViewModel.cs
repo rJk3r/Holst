@@ -10,6 +10,7 @@ namespace Holst.ViewModels
     public class AuthorizationViewModel : ViewModelBase
     {
         private readonly IAuthorizationService _authService;
+        private readonly IDatabaseService _databaseService;
         private readonly AccountStore _accountStore;
         private readonly NavigationStore _navigationStore;
         private readonly ProjectStore _projectStore;
@@ -68,14 +69,19 @@ namespace Holst.ViewModels
 
         public bool HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
 
-        public AuthorizationViewModel(NavigationStore navigationStore, ProjectStore projectStore, AccountStore accountStore, IAuthorizationService authService)
+        public AuthorizationViewModel(NavigationStore navigationStore, ProjectStore projectStore, AccountStore accountStore, IAuthorizationService authService, IDatabaseService databaseService)
         {
             _navigationStore = navigationStore;
             _projectStore = projectStore;
             _accountStore = accountStore;
             _authService = authService;
+            _databaseService = databaseService;
+            _username = string.Empty;
+            _password = string.Empty;
+            _confirmPassword = string.Empty;
+            _errorMessage = string.Empty;
 
-            NavigateToHome = new NavigateCommand<HomeViewModel>(navigationStore, () => new HomeViewModel(navigationStore, projectStore));
+            NavigateToHome = new NavigateCommand<HomeViewModel>(navigationStore, () => new HomeViewModel(navigationStore, projectStore, accountStore, databaseService));
             LoginTopCommand = new RelayCommand(() => IsRegistrationMode = false);
             RegisterTopCommand = new RelayCommand(() => IsRegistrationMode = true);
             ProceedAuthCommand = new RelayCommand(OnProceedAuth);

@@ -17,9 +17,11 @@ namespace Holst.Services
         // Для x64-драйвера обычно используется "PostgreSQL Unicode".
         private readonly string _connectionString = "Driver={PostgreSQL Unicode};Server=127.0.0.1;Port=5432;Database=HolstApplication;UID=postgres;PWD=admin;";
 
-        // Current User data n' role (equals null before the user write it by itself)
-        public string? CurrentUser { get; private set; }
-        public string? CurrentRole { get; private set; }
+        private static string? _currentUser;
+        private static string? _currentRole;
+
+        public string? CurrentUser { get => _currentUser; private set => _currentUser = value; }
+        public string? CurrentRole { get => _currentRole; set => _currentRole = value; }
 
         public DatabaseService()
         {
@@ -237,6 +239,139 @@ namespace Holst.Services
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"[DB] GetAccountCreationDateAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
+            }
+        }
+
+        public async System.Threading.Tasks.Task<string> PromoteToAdminAsync(string login)
+        {
+            string query = "UPDATE users SET role = 'Admin' WHERE login = ?;";
+
+            using (OdbcConnection conn = new OdbcConnection(_connectionString))
+            using (OdbcCommand cmd = new OdbcCommand(query, conn))
+            {
+                cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
+
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] PromoteToAdminAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    int rows = await cmd.ExecuteNonQueryAsync();
+                    return rows > 0
+                        ? $"Пользователь {login} успешно назначен администратором."
+                        : "Пользователь не найден.";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] PromoteToAdminAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
+            }
+        }
+
+        public async System.Threading.Tasks.Task<string> ResetPasswordAsync(string login, string newPassword)
+        {
+            string query = "UPDATE users SET password = ? WHERE login = ?;";
+
+            using (OdbcConnection conn = new OdbcConnection(_connectionString))
+            using (OdbcCommand cmd = new OdbcCommand(query, conn))
+            {
+                cmd.Parameters.Add("?", OdbcType.VarChar).Value = newPassword;
+                cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
+
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] ResetPasswordAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    int rows = await cmd.ExecuteNonQueryAsync();
+                    return rows > 0
+                        ? $"Пароль пользователя {login} сброшен."
+                        : "Пользователь не найден.";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] ResetPasswordAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
+            }
+        }
+
+        public async System.Threading.Tasks.Task<string> GetLastActivityAsync(string login)
+        {
+            string query = "SELECT lastactivity FROM users WHERE login = ?;";
+
+            using (OdbcConnection conn = new OdbcConnection(_connectionString))
+            using (OdbcCommand cmd = new OdbcCommand(query, conn))
+            {
+                cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
+
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetLastActivityAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    object res = await cmd.ExecuteScalarAsync();
+                    return res?.ToString() ?? "Не найден";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetLastActivityAsync execution error: {ex.Message}");
+                    return $"Ошибка выполнения: {ex.Message}";
+                }
+            }
+        }
+
+        public async System.Threading.Tasks.Task<string> GetUserRoleAsync(string login)
+        {
+            string query = "SELECT role FROM users WHERE login = ?;";
+
+            using (OdbcConnection conn = new OdbcConnection(_connectionString))
+            using (OdbcCommand cmd = new OdbcCommand(query, conn))
+            {
+                cmd.Parameters.Add("?", OdbcType.VarChar).Value = login;
+
+                try
+                {
+                    await conn.OpenAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetUserRoleAsync connection error: {ex.Message}");
+                    return $"Ошибка подключения: {ex.Message}";
+                }
+
+                try
+                {
+                    object res = await cmd.ExecuteScalarAsync();
+                    return res?.ToString() ?? "Не найден";
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DB] GetUserRoleAsync execution error: {ex.Message}");
                     return $"Ошибка выполнения: {ex.Message}";
                 }
             }

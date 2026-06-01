@@ -63,6 +63,7 @@ namespace Holst.Services
                 Name = name,
                 AccountCreationDate = dt,
                 Role = (_db.CurrentRole ?? "User"),
+                LastLoginDate = DateTime.Now,
             };
 
             return account;
@@ -80,12 +81,15 @@ namespace Holst.Services
             DateTime dt;
             if (!DateTime.TryParse(created, out dt)) dt = DateTime.MinValue;
 
+            var role = await _db.GetUserRoleAsync(username);
+
             return new Account
             {
                 AccountID = Guid.NewGuid(),
                 Name = name,
                 AccountCreationDate = dt,
-                Role = (_db.CurrentRole ?? "User")
+                Role = (role ?? "User"),
+                LastLoginDate = DateTime.MinValue
             };
         }
 
