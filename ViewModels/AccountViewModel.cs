@@ -108,7 +108,7 @@ namespace Holst.ViewModels
                 return;
             }
 
-            var result = await _databaseService.PromoteToAdminAsync(_accountStore.CurrentAccount.Name);
+            var result = await _databaseService.PromoteToAdminAsync(_accountStore.CurrentAccount!.Name);
             if (result.Contains("успешно", StringComparison.OrdinalIgnoreCase) || result.Contains("success", StringComparison.OrdinalIgnoreCase))
             {
                 Role = "Admin";

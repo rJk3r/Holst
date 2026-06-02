@@ -18,7 +18,6 @@ namespace Holst.IntegrationTests
     {
         private readonly ITestOutputHelper _output;
         private NavigationStore _navigationStore = null!;
-        private ProjectStore _project_store = null!;
         private ProjectStore _projectStore = null!;
         private AccountStore _accountStore = null!;
         private IDatabaseService _databaseService = null!;
@@ -128,7 +127,7 @@ namespace Holst.IntegrationTests
             Assert.Single(vm.Projects);
             Assert.NotNull(_projectStore.CurrentProject);
             Assert.IsType<TextProject>(_projectStore.CurrentProject);
-            _output.WriteLine($"Created project: {_projectStore.CurrentProject.Name}");
+            _output.WriteLine($"Created project: {_projectStore.CurrentProject!.Name}");
         }
 
         [Fact]
@@ -385,7 +384,7 @@ namespace Holst.IntegrationTests
 
             vm.UpdateDocumentBlocks(blocks);
 
-            var textProject = (TextProject)_projectStore.CurrentProject;
+            var textProject = (TextProject)_projectStore.CurrentProject!;
             Assert.Equal(2, textProject.Blocks.Count);
             Assert.IsType<HeaderBlock>(textProject.Blocks[0]);
             Assert.IsType<ParagraphBlock>(textProject.Blocks[1]);

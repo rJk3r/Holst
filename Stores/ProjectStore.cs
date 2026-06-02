@@ -8,8 +8,8 @@ namespace Holst.Stores
     {
         public ObservableCollection<BaseProject> Projects { get; } = new ObservableCollection<BaseProject>();
 
-        private BaseProject _currentProject;
-        public BaseProject CurrentProject
+        private BaseProject? _currentProject;
+        public BaseProject? CurrentProject
         {
             get => _currentProject;
             set
@@ -19,8 +19,8 @@ namespace Holst.Stores
             }
         }
 
-        public event Action CurrentProjectChanged;
-        public event Action ProjectsChanged;
+        public event Action? CurrentProjectChanged;
+        public event Action? ProjectsChanged;
 
         public void AddProject(BaseProject project)
         {

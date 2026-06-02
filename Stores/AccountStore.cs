@@ -4,8 +4,8 @@ namespace Holst.Stores
 {
     public class AccountStore
     {
-        private Account _currentAccount;
-        public Account CurrentAccount
+        private Account? _currentAccount;
+        public Account? CurrentAccount
         {
             get => _currentAccount;
             set
@@ -17,7 +17,7 @@ namespace Holst.Stores
 
         public bool IsLoggedIn => CurrentAccount != null;
 
-        public event Action CurrentAccountChanged;
+        public event Action? CurrentAccountChanged;
 
         public void Logout()
         {

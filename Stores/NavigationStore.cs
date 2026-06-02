@@ -6,11 +6,11 @@ namespace Holst.Stores
     public class NavigationStore
     {
 
-        public event Action CurrentViewModelChanged;
+        public event Action? CurrentViewModelChanged;
 
 
-        private ViewModelBase _currentViewModel;
-        public ViewModelBase CurrentViewModel
+        private ViewModelBase? _currentViewModel;
+        public ViewModelBase? CurrentViewModel
         {
             get => _currentViewModel;
             set
