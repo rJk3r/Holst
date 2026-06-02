@@ -17,10 +17,10 @@ namespace Holst
             AccountStore accountStore = new AccountStore();
 
             // Инициализируем сервисы (Proxy Pattern + Dependency Injection)
-            // DatabaseService — реальный сервис работы с БД
-            IDatabaseService databaseService = new DatabaseService();
+            // InMemoryDatabaseService — in-memory заглушка, не требует реальной БД
+            IDatabaseService databaseService = new InMemoryDatabaseService();
 
-            // DatabaseServiceProxy обёртывает DatabaseService для логирования (Proxy Pattern)
+            // DatabaseServiceProxy обёртывает сервис для логирования (Proxy Pattern)
             IDatabaseService proxiedDatabaseService = new DatabaseServiceProxy(databaseService);
 
             // AuthorizationValidator проверяет права доступа (Strategy Pattern)

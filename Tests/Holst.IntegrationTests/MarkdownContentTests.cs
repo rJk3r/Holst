@@ -83,7 +83,7 @@ namespace Holst.IntegrationTests
             var block = new CodeBlock
             {
                 Text = "some code",
-                Language = null
+                Language = null!
             };
 
             Assert.Null(block.Language);
@@ -346,7 +346,7 @@ namespace Holst.IntegrationTests
         public void TextProject_NullBlocks_SerializesAsEmpty()
         {
             var project = new TextProject();
-            project.Blocks = null;
+            project.Blocks = null!;
 
             using var ms = new MemoryStream();
             using var writer = new BinaryWriter(ms, Encoding.UTF8);

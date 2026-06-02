@@ -4,8 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Holst.Views"
+             xmlns:viewmodels="clr-namespace:Holst.ViewModels"
              mc:Ignorable="d" 
              MinWidth="600"  MinHeight="36" MaxHeight="36">
+    <UserControl.DataContext>
+        <viewmodels:TitleBarViewModel />
+    </UserControl.DataContext>
     <Grid VerticalAlignment="Center" Height="36" MinWidth="600">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -25,13 +29,13 @@
         </StackPanel>
 
         <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal">
-            <Button Style="{StaticResource TitleBarBtn}" Click="MinimizeWindow">
+            <Button Style="{StaticResource TitleBarBtn}" Command="{Binding MinimizeWindowCommand}">
                 <Path Style="{StaticResource MinimizeIcon}"/>
             </Button>
-            <Button Style="{StaticResource TitleBarBtn}" Click="MaximizeWindow">
+            <Button Style="{StaticResource TitleBarBtn}" Command="{Binding MaximizeWindowCommand}">
                 <Path Style="{StaticResource ResizeIcon}"/>
             </Button>
-            <Button Style="{StaticResource CloseBtn}" Click="CloseWindow">
+            <Button Style="{StaticResource CloseBtn}" Command="{Binding CloseWindowCommand}">
                 <Path Style="{StaticResource CloseIcon}"/>
             </Button>
 

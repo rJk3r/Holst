@@ -141,22 +141,37 @@ namespace Holst.ViewModels
                     continue;
                 }
 
+                if (trimmed.StartsWith("> "))
+                {
+                    blocks.Add(new ParagraphBlock { Text = trimmedFull });
+                    continue;
+                }
+
                 if (trimmed.StartsWith("### "))
                 {
                     blocks.Add(new HeaderBlock { Level = 3, Text = trimmedFull.Substring(4).TrimEnd('\r', '\n') });
+                    continue;
                 }
-                else if (trimmed.StartsWith("## "))
+
+                if (trimmed.StartsWith("## "))
                 {
                     blocks.Add(new HeaderBlock { Level = 2, Text = trimmedFull.Substring(3).TrimEnd('\r', '\n') });
+                    continue;
                 }
-                else if (trimmed.StartsWith("# "))
+
+                if (trimmed.StartsWith("# "))
                 {
                     blocks.Add(new HeaderBlock { Level = 1, Text = trimmedFull.Substring(2).TrimEnd('\r', '\n') });
+                    continue;
                 }
-                else
+
+                if (trimmed.StartsWith("- ") || trimmed.StartsWith("* ") || trimmed.StartsWith("+ ") || Regex.IsMatch(trimmed, @"^\d+\.\s"))
                 {
-                    blocks.Add(new ParagraphBlock { Text = text });
+                    blocks.Add(new ParagraphBlock { Text = trimmedFull });
+                    continue;
                 }
+
+                blocks.Add(new ParagraphBlock { Text = text });
             }
 
             return blocks;

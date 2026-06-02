@@ -10,7 +10,7 @@
     <Grid>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="90"/>
+            <ColumnDefinition Width="10"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
@@ -74,14 +74,14 @@
                     BorderThickness="1" 
                     CornerRadius="4" 
                     Margin="15,0,15,15">
-                <RichTextBox x:Name="EditorRichTextBox" 
+                <UserControls:MarkdownRichTextBox x:Name="EditorRichTextBox" 
                              Background="Transparent" 
                              Foreground="White" 
                              BorderThickness="0" 
                              Padding="12" 
                              FontFamily="Consolas" 
                              FontSize="14"
-                             LostFocus="EditorRichTextBox_LostFocus"
+                             BlocksSource="{Binding CurrentTextProject.Blocks}"
                              AcceptsReturn="True"
                              VerticalScrollBarVisibility="Auto"
                              HorizontalScrollBarVisibility="Disabled"/>
